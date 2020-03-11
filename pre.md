@@ -6,10 +6,10 @@
 
 A nerual network is a function: $\hat y = f(x; \theta)$.
 Training the function requires a loss function $L(\hat y, y)$ indicating the distance between our fitted values and real labels, and observed
-data $x$ and $y$. SGD algorithm require we calculate the gradient of $L$ over
+data $x$ and $y$. SGD algorithm require we calculate the gradient of $L$ w.r.t.
 $\theta$, aka $\frac{\partial L}{\partial \theta} = \frac{\partial L}{\partial \hat y}\frac{\partial \hat y}{\partial \theta}$.
 
-Suppose we have a very simple function:
+Let's see how this can be done. Suppose we have a very simple function:
 
 ```python
 def f(x, theta):
@@ -26,11 +26,9 @@ yhat = f(x, theta)
 assert yhat == -0.01
 ```
 
-Now $\hat y$ is a number and we lost all the information about how `yhat` is calculated from $x$ and $\theta$. Thus we can't calculate the gradient $\frac{\partial \hat y}{\partial \theta}$.
+Now $\hat y$ is a number and we lost all the information about how `yhat` is calculated from $x$ and $\theta$. Thus we can't calculate the gradient $\frac{\partial \hat y}{\partial \theta}$. After all, what's $\frac{partial -0.01}{\partial 0.1}$ supposed to be?
 
-This tells us that deeplearning requires more than normal functions.
-
-Let's try another path.
+Let's try another solution.
 
 ```python
 x = Tensor([0.1, 0.2])
@@ -61,7 +59,7 @@ You may have noticed that the structure of `yhat` is very much like the expressi
 
 ### Neural Networks
 
-Neural Networks are recursive structures. They consists of smaller neural networks called "layers". Take the "inception" model for an example (the inception model is a deeplearning model developed by Google to classify images), Each small block in red/blue/green represents a layer. They are basic operations called "pooling", "convolution" and "concatenate". Each layer can be used as an independent neural network model if necessary.
+Neural Networks are recursive structures. They consist of smaller neural networks called "layers". Take the "inception" model for an example (the inception model is a deeplearning model developed by Google to classify images), Each small block in red/blue/green represents a layer. They are basic operations called "pooling", "convolution" and "concatenate". Each layer can be used as an independent neural network model if necessary.
 
 The groups circled in red are identical structures. So they can be grouped into layers too. They are called the "inception blocks".
 
