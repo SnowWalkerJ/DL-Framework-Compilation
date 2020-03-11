@@ -1,0 +1,4 @@
+build/
+*.html
+*.pdf
+.Ds_Store

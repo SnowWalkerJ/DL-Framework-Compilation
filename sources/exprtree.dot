@@ -1,0 +1,21 @@
+digraph g {
+    rankdir=BT
+
+    x0 [label="x[0]"];
+    x1 [label="x[1]"];
+    theta0 [label="theta[0]"];
+    theta1 [label="theta[1]"];
+    a b c;
+    Mul1 [label="Mul", shape="square"];
+    Mul2 [label="Mul", shape="square"];
+    Add [label="Add", shape="square"];
+    x0->Mul1;
+    theta0->Mul1;
+    x1->Mul2;
+    theta1->Mul2;
+    Mul1->a;
+    Mul2->b;
+    a->Add;
+    b->Add;
+    Add->c;
+}
