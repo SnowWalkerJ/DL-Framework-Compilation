@@ -26,7 +26,7 @@ yhat = f(x, theta)
 assert yhat == -0.01
 ```
 
-Now $\hat y$ is a number and we lost all the information about how `yhat` is calculated from $x$ and $\theta$. Thus we can't calculate the gradient $\frac{\partial \hat y}{\partial \theta}$. After all, what's $\frac{partial -0.01}{\partial 0.1}$ supposed to be?
+Now $\hat y$ is a number and we lost all the information about how `yhat` is calculated from $x$ and $\theta$. Thus we can't calculate the gradient $\frac{\partial \hat y}{\partial \theta}$. After all, what's $\frac{\partial -0.01}{\partial 0.1}$ supposed to be?
 
 Let's try another solution.
 
