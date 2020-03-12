@@ -15,6 +15,7 @@ As memtioned before, neural networks consists of smaller neural networks aka lay
 ```python
 class Model(nn.Module):
     def __init__(self, input_size, hidden_size):
+        super().__init__()
         self.layer1 = nn.Linear(input_size, hidden_size)
         self.relu = nn.ReLU()
         self.layer2 = nn.Linear(hidden_size, 1)
@@ -94,11 +95,134 @@ def f_static(x):
 
 ## Solutions
 
-### Direct Construction (Tensorflow)
+### Trace
 
-This is like our Numflow. It provides basic Expression classes and user 
+As mentioned before, deep learning operations are usually data-independent. Pytorch takes this advantage and develops a method called "trace". The basic idea is to get a sample data, put it through the computation graph, and trace what operations it's been through.
 
-### Trace (Pytorch)
+Pros:
 
-### Script (Pytorch)
+- This is easy to accomplish
+- Generated expression tree is simple to execute
+- Functions are inlined automatically
+- Unused operations are dropped automatically
 
+Cons:
+
+- Unable to express data-dependent operations
+
+#### Example
+
+We have a function `f`:
+
+```python
+def f(x):
+    y = (x[0] * theta[0]) + (x[1] * theta[1])
+    return exp(y)
+```
+
+Then we construct a sample data:
+
+```python
+x = Tensor([0.1, 0.1])
+```
+
+The `Tensor` class is written in a way that all its operators are overriden so that when you call `x[0] * theta[0]` it generates something like: `Mul(Index(x, 0), Index(theta, 0))`.
+
+Then `f(x)` is compiled into something like:
+
+```python
+Exp(Add(
+    Mul(Index(x, 0), Index(theta, 0)),
+    Mul(Index(x, 1), Index(theta, 1)),
+))
+```
+
+However, if we have a more complex function:
+
+```python
+def g(x):
+    if x[0] > 0:
+        return x / 2
+    else:
+        return x + 1
+```
+
+Then the behavior of the compiled graph is undefined. It depends on the sample data you put into the function.
+
+If you feed `x = [0.1, 0.1]`, then it goes into the first branch and returns `Div(x, 2)`.
+If you feed `x = [-0.1, 0.1]`, then it goes into the second branch and returns `Add(x, 1)`.
+
+### Script
+
+Too solve the data-dependency problem, Pytorch comes with another compilation solution called "script". It provides
+a new language called `TorchScript`, which is a subset of Python language.
+
+The "script" method first translates your
+python function into a TorchScript "abstract syntax tree"(AST). The variables are static-typed. Their types are decided
+according to initial value, type hint or comment. An AST is a tree of blocks, statments and expressions as nodes.
+
+Then each node in the tree is replaced (re-interpreted) to a TorchScript intermediate representation(IR).
+
+An IR is a representation of code between high-level programming language and low-level assembly. It's high-level enough not to care about the details of target computer, while low-level enough that it inherits no character of the original language. It's commonly used in modern compilation toolchains like llvm.
+
+![IR struct](./images/ir-struct.png)
+
+At this stage, the computation graph is constructed. Pytorch will run some optimizations to the graph, including "UnrollLoops", "EliminateDeadCode", "EliminateCommonSubexpression", "FuseGraph".
+
+Finally a graph executer translates the IR into more low-level instructions, which can be executed by a pytorch virtual machine.
+
+#### Example
+
+TorchScript code:
+
+```python
+def func(x):
+    if x[0] > 0:
+        return x * 2
+    else:
+        return x + 1
+```
+
+Python AST:
+
+```python
+FunctionDef(name="func", params="x", body=[
+    IfBlock(test=GT(GetItem(Name("x"), Number(0)), Number(0)), body=[
+        Return(Mul(Name("x"), Number(2)))
+    ], else_=[
+        Return(Add(Name("x"), Number(1)))
+    ])
+])
+```
+
+TorchScript IR:
+
+```
+graph(%x.1 : Tensor):
+  %2 : int = prim::Constant[value=0]()
+  %8 : int = prim::Constant[value=2]()
+  %11 : int = prim::Constant[value=1]()
+  %4 : Tensor = aten::select(%x.1, %2, %2)
+  %5 : Tensor = aten::gt(%4, %2)
+  %6 : bool = aten::Bool(%5)
+  %22 : Tensor = prim::If(%6)
+   block0():
+      %9 : Tensor = aten::mul(%x.1, %8)
+    block1():
+      %13 : Tensor = aten::add(%x.1, %11, %11)
+  return (%22)
+```
+
+Instructions:
+
+```asm
+MOV x, y
+ADD x, 1
+PUSH x
+TEST x, x
+JGT ...
+ADD x, 1
+JMP ...
+DIV x, 2
+RET x
+```
