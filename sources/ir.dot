@@ -1,0 +1,11 @@
+digraph g {
+    rankdir=LR
+
+    Julia -> IR
+    Python -> IR
+    Java -> IR
+
+    IR -> CPU
+    IR -> GPU
+    IR -> Mobile
+}

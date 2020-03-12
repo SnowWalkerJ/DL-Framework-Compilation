@@ -116,6 +116,7 @@ We have a function `f`:
 
 ```python
 def f(x):
+    unused = x[1] * theta[0]  # unused expression
     y = (x[0] * theta[0]) + (x[1] * theta[1])
     return exp(y)
 ```
@@ -154,8 +155,10 @@ If you feed `x = [-0.1, 0.1]`, then it goes into the second branch and returns `
 
 ### Script
 
-Too solve the data-dependency problem, Pytorch comes with another compilation solution called "script". It provides
+To solve the data-dependency problem, Pytorch comes with another compilation solution called "script". It provides
 a new language called `TorchScript`, which is a subset of Python language.
+
+A lot of tools (such as pypy and numba) trying to accelerate Python focus on accelerating a subset of python. By dropping some characteristic of Python as a dynamic-typed language. They enable you to write simple python syntax while getting high performance matchable to C. TorchScript is among these tools.
 
 The "script" method first translates your
 python function into a TorchScript "abstract syntax tree"(AST). The variables are static-typed. Their types are decided
@@ -164,6 +167,8 @@ according to initial value, type hint or comment. An AST is a tree of blocks, st
 Then each node in the tree is replaced (re-interpreted) to a TorchScript intermediate representation(IR).
 
 An IR is a representation of code between high-level programming language and low-level assembly. It's high-level enough not to care about the details of target computer, while low-level enough that it inherits no character of the original language. It's commonly used in modern compilation toolchains like llvm.
+
+![IR usage](./build/graph/ir.png)
 
 ![IR struct](./images/ir-struct.png)
 
